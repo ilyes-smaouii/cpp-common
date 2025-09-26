@@ -3,6 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 namespace HLP {
 namespace Misc {
@@ -24,6 +25,23 @@ struct FIXED_SIZE_BUFFER {
   constexpr static std::size_t get_buffer_size() { return BUFFER_SIZE; }
   byte_t *data() { return _data.data(); }
   const byte_t *data() const { return _data.data(); }
+};
+
+struct my_buffer{
+  std::shared_ptr<byte_t[]> _data{};
+
+  my_buffer(std::size_t buffer_size);
+  byte_t *data();
+  std::shared_ptr<byte_t[]> ptr();
+  const byte_t *data() const;
+  template<typename DT>
+  DT dataAs() {
+    return reinterpret_cast<DT>(_data.get());
+  }
+  template<typename DT>
+  DT dataAs() const {
+    return const_cast<DT>(reinterpret_cast<DT>(_data.get()));
+  }
 };
 
 } // namespace Misc

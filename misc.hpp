@@ -1,3 +1,5 @@
+#pragma once
+
 #include "common-common.hpp"
 
 #include <array>
@@ -27,20 +29,38 @@ struct FIXED_SIZE_BUFFER {
   const byte_t *data() const { return _data.data(); }
 };
 
-struct my_buffer{
+struct my_shared_buffer {
   std::shared_ptr<byte_t[]> _data{};
+  const std::size_t _size{};
 
-  my_buffer(std::size_t buffer_size);
-  byte_t *data();
+  /*
+   * Allocates buffer_size bytes in memory, and 0-initializes them
+   */
+  my_shared_buffer(std::size_t buffer_size);
+  ~my_shared_buffer() = default;
+  //
   std::shared_ptr<byte_t[]> ptr();
+  byte_t *data();
   const byte_t *data() const;
-  template<typename DT>
+  std::size_t getLength() const;
+  std::size_t getSize() const;
+  template <typename DT>
   DT dataAs() {
     return reinterpret_cast<DT>(_data.get());
   }
-  template<typename DT>
+  template <typename DT>
   DT dataAs() const {
     return const_cast<DT>(reinterpret_cast<DT>(_data.get()));
+  }
+  byte_t *getNthBytePtr(std::size_t pos);
+  const byte_t *getNthBytePtr(std::size_t pos) const;
+  template <typename DT>
+  DT getNthBytePtrAs(std::size_t pos) {
+    return reinterpret_cast<DT>(_data.get() + pos);
+  }
+  template <typename DT>
+  DT getNthBytePtrAs(std::size_t pos) const {
+    return const_cast<DT>(reinterpret_cast<DT>(_data.get() + pos));
   }
 };
 

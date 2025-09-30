@@ -1,7 +1,9 @@
-#include "common-common.hpp"
+#pragma once
 
-#include <iostream>
-#include <string>
+// #include "common-common.hpp"
+
+// #include <iostream>
+// #include <string>
 
 namespace HLP {
 // should I nest another namespace inside this one ?

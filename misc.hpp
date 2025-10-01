@@ -6,18 +6,14 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <string>
 
 namespace HLP {
 namespace Misc {
 
 /*
-  Counts how many bits, at minimum, it takes to represent an unsigned number
+Structure for dealing with fixed_size buffers
 */
-std::size_t count_bits(std::uint64_t num);
-
-/*
-  Structure for dealing with fixed_size buffers
- */
 template <std::size_t BUFFER_SIZE>
 struct FIXED_SIZE_BUFFER {
   std::array<byte_t, BUFFER_SIZE> _data{};
@@ -30,9 +26,11 @@ struct FIXED_SIZE_BUFFER {
 };
 
 struct my_shared_buffer {
+private:
   std::shared_ptr<byte_t[]> _data{};
   const std::size_t _size{};
 
+public:
   /*
    * Allocates buffer_size bytes in memory, and 0-initializes them
    */
@@ -63,6 +61,14 @@ struct my_shared_buffer {
     return const_cast<DT>(reinterpret_cast<DT>(_data.get() + pos));
   }
 };
+
+/*
+  Counts how many bits, at minimum, it takes to represent an unsigned number
+*/
+std::size_t count_bits(std::uint64_t num);
+
+std::string construct_string_with_max_len(const char *start_char,
+                                          std::size_t max_len);
 
 } // namespace Misc
 } // namespace HLP

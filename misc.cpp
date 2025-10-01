@@ -1,7 +1,9 @@
 #include "misc.hpp"
 #include <cstddef>
 #include <cstring>
+#include <string.h>
 #include <memory>
+
 
 namespace HLP {
 namespace Misc {
@@ -27,13 +29,9 @@ byte_t *my_shared_buffer::data() { return _data.get(); }
 
 const byte_t *my_shared_buffer::data() const { return _data.get(); }
 
-std::size_t my_shared_buffer::getLength() const {
-  return _size;
-}
+std::size_t my_shared_buffer::getLength() const { return _size; }
 
-std::size_t my_shared_buffer::getSize() const {
-  return _size;
-}
+std::size_t my_shared_buffer::getSize() const { return _size; }
 
 byte_t *my_shared_buffer::getNthBytePtr(std::size_t pos) {
   return _data.get() + pos;
@@ -41,6 +39,15 @@ byte_t *my_shared_buffer::getNthBytePtr(std::size_t pos) {
 
 const byte_t *my_shared_buffer::getNthBytePtr(std::size_t pos) const {
   return _data.get() + pos;
+}
+
+std::string construct_string_with_max_len(const char *start_char,
+                                          std::size_t max_len) {
+  if (!start_char) {
+    return {};
+  } else {
+    return std::string{start_char, strnlen(start_char, max_len)};
+  }
 }
 
 } // namespace Misc

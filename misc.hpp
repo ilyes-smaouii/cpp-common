@@ -15,7 +15,7 @@ namespace Misc {
 Structure for dealing with fixed_size buffers
 */
 template <std::size_t BUFFER_SIZE>
-struct FIXED_SIZE_BUFFER {
+struct ArrayBuffer {
   std::array<byte_t, BUFFER_SIZE> _data{};
 
   // TO-DO : add relevant methods
@@ -23,9 +23,33 @@ struct FIXED_SIZE_BUFFER {
   constexpr static std::size_t get_buffer_size() { return BUFFER_SIZE; }
   byte_t *data() { return _data.data(); }
   const byte_t *data() const { return _data.data(); }
+  template <typename DT>
+  requires(std::is_pointer_v<DT>)
+  DT dataAs() {
+    return reinterpret_cast<DT>(_data.get());
+  }
+  template <typename DT>
+  requires(std::is_pointer_v<DT>)
+  DT dataAs() const {
+    return const_cast<DT>(reinterpret_cast<DT>(_data.get()));
+  }
+  constexpr static std::size_t getSize() { return BUFFER_SIZE; }
+  // TO-DO : test these functions below
+  template <typename DT>
+  requires(std::is_pointer_v<DT>)
+  DT getNthBytePtrAs(std::size_t index) {
+    return reinterpret_cast<DT>(this->data() + index);
+  };
+  // Also, is the second one really necessary, or is just redundant ? I'm not
+  // sure
+  template <typename DT>
+  requires(std::is_pointer_v<DT>)
+  const DT getNthBytePtrAs(std::size_t index) const {
+    return reinterpret_cast<const DT>(this->data() + index);
+  };
 };
 
-struct my_shared_buffer {
+struct SharedNonFixedSizeBuffer {
 private:
   std::shared_ptr<byte_t[]> _data{};
   const std::size_t _size{};
@@ -34,8 +58,9 @@ public:
   /*
    * Allocates buffer_size bytes in memory, and 0-initializes them
    */
-  my_shared_buffer(std::size_t buffer_size);
-  ~my_shared_buffer() = default;
+  SharedNonFixedSizeBuffer() = delete;
+  SharedNonFixedSizeBuffer(std::size_t buffer_size);
+  ~SharedNonFixedSizeBuffer() = default;
   //
   std::shared_ptr<byte_t[]> ptr();
   byte_t *data();

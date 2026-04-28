@@ -1,15 +1,32 @@
 #pragma once
 
-#include "common-common.hpp"
-
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
 
+#include "common-base.hpp"
+
 namespace HLP {
-namespace Misc {
+namespace Containers {
+
+template <typename T>
+concept IsUsableAsBuffer = true && requires(T t) {
+  { std::data(t) } -> std::convertible_to<const byte_t *>;
+  { std::size(t) } -> std::convertible_to<std::size_t>;
+  { t.template dataAs<byte_t *>() } -> std::same_as<byte_t *>;
+};
+
+template <typename T>
+concept HasStaticSize = requires(T t) { T::size(); };
+
+template <typename T>
+concept IsUsableAsStaticSizeBuffer = IsUsableAsBuffer<T> && HasStaticSize<T>;
+
+template <typename T>
+concept IsUsableAsRuntimeSizeBuffer =
+    IsUsableAsBuffer<T> && requires(T t, std::size_t size) { t.setSize(size); };
 
 /*
 Structure for dealing with fixed_size buffers
@@ -24,26 +41,26 @@ struct ArrayBuffer {
   byte_t *data() { return _data.data(); }
   const byte_t *data() const { return _data.data(); }
   template <typename DT>
-  requires(std::is_pointer_v<DT>)
+    requires(std::is_pointer_v<DT>)
   DT dataAs() {
     return reinterpret_cast<DT>(_data.get());
   }
   template <typename DT>
-  requires(std::is_pointer_v<DT>)
+    requires(std::is_pointer_v<DT>)
   DT dataAs() const {
     return const_cast<DT>(reinterpret_cast<DT>(_data.get()));
   }
-  constexpr static std::size_t getSize() { return BUFFER_SIZE; }
+  constexpr static std::size_t size() { return BUFFER_SIZE; }
   // TO-DO : test these functions below
   template <typename DT>
-  requires(std::is_pointer_v<DT>)
+    requires(std::is_pointer_v<DT>)
   DT getNthBytePtrAs(std::size_t index) {
     return reinterpret_cast<DT>(this->data() + index);
   };
   // Also, is the second one really necessary, or is just redundant ? I'm not
   // sure
   template <typename DT>
-  requires(std::is_pointer_v<DT>)
+    requires(std::is_pointer_v<DT>)
   const DT getNthBytePtrAs(std::size_t index) const {
     return reinterpret_cast<const DT>(this->data() + index);
   };
@@ -66,7 +83,7 @@ public:
   byte_t *data();
   const byte_t *data() const;
   std::size_t getLength() const;
-  std::size_t getSize() const;
+  std::size_t size() const;
   template <typename DT>
   DT dataAs() {
     return reinterpret_cast<DT>(_data.get());
@@ -95,5 +112,5 @@ std::size_t count_bits(std::uint64_t num);
 std::string construct_string_with_max_len(const char *start_char,
                                           std::size_t max_len);
 
-} // namespace Misc
+} // namespace Containers
 } // namespace HLP

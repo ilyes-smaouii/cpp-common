@@ -1,12 +1,13 @@
-#include "misc.hpp"
 #include <cstddef>
 #include <cstring>
-#include <string.h>
 #include <memory>
+#include <string.h>
 
+#include "common-base.hpp"
+#include "containers.hpp"
 
 namespace HLP {
-namespace Misc {
+namespace Containers {
 
 std::size_t count_bits(std::uint64_t num) {
   std::size_t res{0};
@@ -51,5 +52,5 @@ std::string construct_string_with_max_len(const char *start_char,
   }
 }
 
-} // namespace Misc
+} // namespace Containers
 } // namespace HLP

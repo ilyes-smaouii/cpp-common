@@ -33,7 +33,7 @@ const byte_t *SharedNonFixedSizeBuffer::data() const { return _data.get(); }
 
 std::size_t SharedNonFixedSizeBuffer::getLength() const { return _size; }
 
-std::size_t SharedNonFixedSizeBuffer::getSize() const { return _size; }
+std::size_t SharedNonFixedSizeBuffer::size() const { return _size; }
 
 byte_t *SharedNonFixedSizeBuffer::getNthBytePtr(std::size_t pos) {
   return _data.get() + pos;

@@ -41,7 +41,7 @@ public:
           "Generated Uuid {} has already been generated before !", new_uuid));
       new_uuid = m_rng();
       inserted = (m_ids.insert(new_uuid)).second;
-      [[unlikely]] if (++attempts > 10) {
+      [[unlikely]] if (++attempts > MAX_ATTEMPTS) {
         THROW_ERROR_MSG("Max attempts to genrate Uuid exceeded !");
       }
     }

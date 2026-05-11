@@ -1,12 +1,16 @@
 #pragma once
 
 #include <array>
+#include <cmath>
+#include <csetjmp>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "common-base.hpp"
+#include "cpp-common/common-base.hpp"
 
 namespace HLP {
 namespace Containers {
@@ -15,7 +19,7 @@ template <typename T>
 concept IsUsableAsBuffer = true && requires(T t) {
   { std::data(t) } -> std::convertible_to<const byte_t *>;
   { std::size(t) } -> std::convertible_to<std::size_t>;
-  { t.template dataAs<byte_t *>() } -> std::same_as<byte_t *>;
+  // { t.template dataAs<byte_t *>() } -> std::same_as<byte_t *>;
 };
 
 template <typename T>
@@ -25,14 +29,17 @@ template <typename T>
 concept IsUsableAsStaticSizeBuffer = IsUsableAsBuffer<T> && HasStaticSize<T>;
 
 template <typename T>
-concept IsUsableAsRuntimeSizeBuffer =
-    IsUsableAsBuffer<T> && requires(T t, std::size_t size) { t.setSize(size); };
+concept IsUsableAsRuntimeSizeBuffer = IsUsableAsBuffer<T> && !HasStaticSize<T>;
+
+template <typename T>
+concept IsUsableAsDynamicSizeBuffer =
+    IsUsableAsRuntimeSizeBuffer<T> &&
+    requires(T t, std::size_t size) { t.resize(size); };
 
 /*
 Structure for dealing with fixed_size buffers
 */
-template <std::size_t BUFFER_SIZE>
-struct ArrayBuffer {
+template <std::size_t BUFFER_SIZE> struct ArrayBuffer {
   std::array<byte_t, BUFFER_SIZE> _data{};
 
   // TO-DO : add relevant methods
@@ -67,10 +74,6 @@ struct ArrayBuffer {
 };
 
 struct SharedNonFixedSizeBuffer {
-private:
-  std::shared_ptr<byte_t[]> _data{};
-  const std::size_t _size{};
-
 public:
   /*
    * Allocates buffer_size bytes in memory, and 0-initializes them
@@ -84,25 +87,32 @@ public:
   const byte_t *data() const;
   std::size_t getLength() const;
   std::size_t size() const;
-  template <typename DT>
-  DT dataAs() {
+  template <typename DT> DT dataAs() {
     return reinterpret_cast<DT>(_data.get());
   }
-  template <typename DT>
-  DT dataAs() const {
+  template <typename DT> DT dataAs() const {
     return const_cast<DT>(reinterpret_cast<DT>(_data.get()));
   }
   byte_t *getNthBytePtr(std::size_t pos);
   const byte_t *getNthBytePtr(std::size_t pos) const;
-  template <typename DT>
-  DT getNthBytePtrAs(std::size_t pos) {
+  template <typename DT> DT getNthBytePtrAs(std::size_t pos) {
     return reinterpret_cast<DT>(_data.get() + pos);
   }
-  template <typename DT>
-  DT getNthBytePtrAs(std::size_t pos) const {
+  template <typename DT> DT getNthBytePtrAs(std::size_t pos) const {
     return const_cast<DT>(reinterpret_cast<DT>(_data.get() + pos));
   }
+
+protected:
+  std::shared_ptr<byte_t[]> _data{};
+  const std::size_t _size{};
 };
+
+static_assert(IsUsableAsRuntimeSizeBuffer<SharedNonFixedSizeBuffer>,
+              "Error : SharedNonFixedSizeBuffer doesn't satisfy "
+              "IsUsableAsRuntimeSizeBuffer requirements !");
+static_assert(IsUsableAsDynamicSizeBuffer<std::vector<byte_t>>,
+              "Error : std::vector<byte_t> should be satisfy "
+              "IsUsableAsModifiableSizeBuffer requirements !");
 
 /*
   Counts how many bits, at minimum, it takes to represent an unsigned number

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <functional>
 #include <iterator>
+#include <type_traits>
 
 namespace HLP {
 using byte_t = std::uint8_t;

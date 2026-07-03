@@ -25,6 +25,26 @@ static LogLevel CURRENT_LOG_LEVEL{LogLevel::DEBUG};
 
 static std::ostream *DEFAULT_OSTREAM = &std::cout;
 
+class NullOstream : public std::ostream {
+  // TO-DO : improve class
+
+public:
+  NullOstream() : std::ostream(nullptr) {}
+  NullOstream(const NullOstream &) = delete;
+  NullOstream &operator=(const NullOstream &) = delete;
+  ~NullOstream() override = default;
+
+  static NullOstream &getInstance() {
+    static NullOstream instance;
+    return instance;
+  }
+
+  template <typename T>
+  NullOstream &operator<<(const T &) {
+    return *this;
+  }
+};
+
 template <typename... Args>
 std::vector<std::string> getLogEntries(LogLevel log_lvl, Args... args) {
   if (log_lvl < CURRENT_LOG_LEVEL) {

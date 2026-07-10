@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <cstdint>
 #include <format>
 #include <memory>
@@ -11,8 +12,12 @@
 
 namespace HLP {
 
+template <std::unsigned_integral T> T truncateUint64(std::uint64_t value) {
+  return static_cast<T>(value);
+}
+
 template <typename T>
-  requires std::is_integral_v<T>
+  requires std::is_unsigned_v<T>
 class UuidGeneratorAux {
   static_assert(
       sizeof(T) <= sizeof(std::uint64_t),
@@ -21,7 +26,7 @@ class UuidGeneratorAux {
 public:
   using uuid_t = T;
 
-  UuidGeneratorAux() : m_ids(), m_rng(std::random_device{}()) {
+  UuidGeneratorAux() : m_seed(std::random_device{}()), m_rng(m_seed), m_ids() {
     // TO-DO : initialization
   }
   UuidGeneratorAux(UuidGeneratorAux const &) = default;
@@ -31,9 +36,8 @@ public:
 
   T getNextUuid() {
     constexpr std::size_t MAX_ATTEMPTS{10};
-    std::uint64_t new_uuid;
     bool inserted = false;
-    new_uuid = m_rng();
+    T new_uuid = m_rng(); // not entirely sure I need this
     inserted = (m_ids.insert(new_uuid)).second;
     std::size_t attempts = 1;
     [[unlikely]] while (!inserted) {
@@ -49,22 +53,32 @@ public:
   }
 
 protected:
-  std::unordered_set<T> m_ids{};
+  std::mt19937_64::result_type m_seed{};
   std::mt19937_64 m_rng{};
+  std::unordered_set<T> m_ids{};
 
 private:
 };
 
 template <typename T> class SingletonUuidGenerator {
 public:
-  SingletonUuidGenerator(SingletonUuidGenerator &other) = delete;
-  SingletonUuidGenerator &operator=(SingletonUuidGenerator &other) = delete;
+  SingletonUuidGenerator(SingletonUuidGenerator const &other) = delete;
+  SingletonUuidGenerator(SingletonUuidGenerator &&other) = delete;
+  SingletonUuidGenerator &
+  operator=(SingletonUuidGenerator const &other) = delete;
+  SingletonUuidGenerator &operator=(SingletonUuidGenerator &&other) = delete;
 
-  static std::shared_ptr<SingletonUuidGenerator<T>> &getInstancePtr() {
-    if (!m_instance_ptr) {
-      m_instance_ptr = std::make_shared<SingletonUuidGenerator<T>>();
+  static std::shared_ptr<SingletonUuidGenerator<T>> getInstancePtr() {
+    if (!SingletonUuidGenerator::m_instance_ptr) {
+      SingletonUuidGenerator<T>();
+      // TO-DO : make a choice here
+      // auto ptr = new SingletonUuidGenerator();
+      // SingletonUuidGenerator::m_instance_ptr =
+      //     std::shared_ptr<SingletonUuidGenerator<T>>(ptr);
+      SingletonUuidGenerator::m_instance_ptr =
+          std::make_shared<SingletonUuidGenerator>();
     }
-    return *m_instance_ptr;
+    return SingletonUuidGenerator::m_instance_ptr;
   }
 
   T getNextUuid() { return m_uuid_gen_ptr->getNextUuid(); }
@@ -74,9 +88,11 @@ protected:
     m_uuid_gen_ptr = std::make_shared<UuidGeneratorAux<T>>();
   }
 
+  // TO-DO : figure out Singleton mechanics/check correction
+  static inline std::shared_ptr<SingletonUuidGenerator<T>> m_instance_ptr;
+  std::shared_ptr<UuidGeneratorAux<T>> m_uuid_gen_ptr;
+
 private:
-  static std::shared_ptr<SingletonUuidGenerator<T>> m_instance_ptr;
-  static std::shared_ptr<UuidGeneratorAux<T>> m_uuid_gen_ptr;
 };
 
 } // namespace HLP

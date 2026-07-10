@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "common-base.hpp"
-#include "cpp-common/common-base.hpp"
 
 namespace HLP {
 namespace Containers {
